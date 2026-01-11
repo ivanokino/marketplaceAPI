@@ -1,24 +1,27 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 import uvicorn
 from Database.db import SessionDep_prod, setup_prod_db
-from Schemas.ProductSchemes import ProductSchema
+from Schemas.ProductSchemas import ProductSchema
 from sqlalchemy.future import select
 from sqlalchemy import delete
-from Models.ProductModels import ProductModel
-
+from Models.APImodels import ProductModel
+from API.usersAPI import router as users_router, security
 
 app = FastAPI()
+app.include_router(users_router)
 
 @app.post('/setup_prod')
 async def setup_prod():
     await setup_prod_db()
 
-@app.post("/post")
+@app.post("/post", dependencies=[Depends(security.access_token_required)])
 async def post_product(session:SessionDep_prod,product:ProductSchema):
-    new_prod = ProductModel()
-    new_prod.count = product.count
-    new_prod.name = product.name
-    new_prod.price = product.price
+    new_prod = ProductModel(
+        count=product.count,
+        name = product.name,
+        price = product.price
+    )
+
     session.add(new_prod)
     await session.commit()
     return {"product is posted": product}
@@ -32,7 +35,7 @@ async def main_page(session:SessionDep_prod):
     return {"products": products}
 
 
-@app.post("/del")
+@app.post("/del", dependencies=[Depends(security.access_token_required)])
 async def post_product(session:SessionDep_prod,id:int):
     product = await session.execute(select(ProductModel).where(ProductModel.id==id))
     query= delete(ProductModel).where(ProductModel.id==id)
