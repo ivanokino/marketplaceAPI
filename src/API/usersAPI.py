@@ -28,7 +28,6 @@ async def get_current_user_id(token = Depends(security.access_token_required)):
 async def setup_users():
     await setup_users_db()
 
-
 @router.post("/register")
 async def register(user:UserSchema, session:SessionDep_users):
     result = await session.execute(select(UserModel).where(UserModel.username == user.username))

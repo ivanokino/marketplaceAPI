@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
 
 from Schemas.ProductSchemas import ProductSchema
@@ -14,12 +14,12 @@ async def setup_prod():
 
 @router.post("/post", dependencies=[Depends(security.access_token_required)])
 async def post_product(session:SessionDep_prod,product:ProductSchema,
-                       user_id: int = Depends(get_current_user_id)):
+                       user_id = Depends(get_current_user_id)):
     new_prod = ProductModel(
         count=product.count,
         name = product.name,
         price = product.price,
-        owner_id = user_id
+        owner_id = int(user_id)
     )
 
     session.add(new_prod)
@@ -28,10 +28,18 @@ async def post_product(session:SessionDep_prod,product:ProductSchema,
 
 
 @router.post("/del", dependencies=[Depends(security.access_token_required)])
-async def post_product(session:SessionDep_prod,id:int):
+async def delete_product(session:SessionDep_prod,id:int,
+                         user_id = Depends(get_current_user_id)):
     product = await session.execute(select(ProductModel).where(ProductModel.id==id))
-    query= delete(ProductModel).where(ProductModel.id==id)
-    await session.execute(query)
-    await session.commit()
-    product = product.scalar_one_or_none()
-    return {"product is deleted": product}
+    
+    product= product.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Item isnt found")
+    
+    if product.owner_id == int(user_id):
+        query= delete(ProductModel).where(ProductModel.id==id)
+        await session.execute(query)
+        await session.commit()
+        return {"product is deleted": product}
+    
+    raise HTTPException(status_code=403, detail="Its not your item")
