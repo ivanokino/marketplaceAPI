@@ -5,7 +5,7 @@ from Schemas.ProductSchemas import ProductSchema
 from sqlalchemy.future import select
 from sqlalchemy import delete
 from Models.APImodels import ProductModel
-from API.usersAPI import router as users_router, security
+from API.usersAPI import router as users_router, security, get_current_user_id
 
 app = FastAPI()
 app.include_router(users_router)
@@ -15,16 +15,18 @@ async def setup_prod():
     await setup_prod_db()
 
 @app.post("/post", dependencies=[Depends(security.access_token_required)])
-async def post_product(session:SessionDep_prod,product:ProductSchema):
+async def post_product(session:SessionDep_prod,product:ProductSchema,
+                       user_id: int = Depends(get_current_user_id)):
     new_prod = ProductModel(
         count=product.count,
         name = product.name,
-        price = product.price
+        price = product.price,
+        owner_id = user_id
     )
 
     session.add(new_prod)
     await session.commit()
-    return {"product is posted": product}
+    return {"product is posted": new_prod}
 
 
 

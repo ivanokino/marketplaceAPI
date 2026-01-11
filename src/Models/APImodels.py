@@ -23,6 +23,7 @@ class ProductModel(Base):
     name: Mapped[str]
     price: Mapped[float]
     count: Mapped[int]
+    owner_id: Mapped[int]
     # owner_id: Mapped[int] = mapped_column(
     #     ForeignKey("users.id"),  
     #     nullable=False

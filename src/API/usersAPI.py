@@ -1,5 +1,5 @@
 from authx import AuthX, AuthXConfig
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from Schemas.UserSchemas import UserSchema
 from Database.db import SessionDep_users, setup_users_db
 from Models.APImodels import UserModel
@@ -18,7 +18,12 @@ config.JWT_COOKIE_CSRF_PROTECT = False
 
 security = AuthX(config=config)
 
-
+async def get_current_user_id(token = Depends(security.access_token_required)):
+    payload_dict = dict(token)
+    
+    user_id = payload_dict.get('sub')
+    return user_id
+    
 @router.post("/setup_users")
 async def setup_users():
     await setup_users_db()
