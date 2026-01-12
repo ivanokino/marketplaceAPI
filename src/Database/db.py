@@ -1,10 +1,13 @@
 from typing import Annotated
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase  
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from fastapi import Depends
 
+
 class Base(DeclarativeBase):
     pass
+
+############     PRODUCTs    ##############################
 
 product_engine = create_async_engine("sqlite+aiosqlite:///products.db")
 
@@ -22,7 +25,7 @@ async def setup_prod_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
-
+############     USERS    ##############################
     
 users_engine = create_async_engine("sqlite+aiosqlite:///users.db")
 user_session = async_sessionmaker(users_engine, expire_on_commit=False)
@@ -38,7 +41,18 @@ async def setup_users_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
+############     TEST    ##############################
 
+test_engine = create_async_engine("sqlite+aiosqlite:///prod_test.db")
+
+test_session = async_sessionmaker(test_engine, expire_on_commit=False)
+async def get_test_session():
+    async with test_session() as session:
+        yield session
+
+async def init_test_db():
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 
