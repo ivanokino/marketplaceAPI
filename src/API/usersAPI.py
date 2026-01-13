@@ -36,9 +36,10 @@ async def register(user:UserSchema, session:SessionDep_users):
     if existing_user:
         raise HTTPException(status_code=400, detail="User is already exist")
     new_user = new_user = UserModel(
-        username=user.username,
-        password=user.password
+        username=user.username
     )
+    new_user.set_hashed_password(user.password)
+
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
@@ -50,7 +51,7 @@ async def register(user:UserSchema, session:SessionDep_users,  respone: Response
     result = await session.execute(select(UserModel).where(UserModel.username == user.username))
     existing_user = result.scalar_one_or_none() 
     
-    if existing_user and existing_user.password == user.password:
+    if existing_user and existing_user.check_password(user.password  ):
         token = security.create_access_token(uid=str(existing_user.id))
         respone.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token)
     
