@@ -41,7 +41,7 @@ async def setup_users_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
-############     TEST    ##############################
+############     TESTS    ##############################
 
 test_engine = create_async_engine("sqlite+aiosqlite:///prod_test.db")
 
