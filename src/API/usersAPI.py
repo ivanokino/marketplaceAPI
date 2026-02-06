@@ -35,7 +35,7 @@ async def register(user:UserSchema, session:SessionDep_users):
 
     if existing_user:
         raise HTTPException(status_code=400, detail="User is already exist")
-    new_user = new_user = UserModel(
+    new_user = UserModel(
         username=user.username
     )
     new_user.set_hashed_password(user.password)
@@ -47,14 +47,25 @@ async def register(user:UserSchema, session:SessionDep_users):
 
 
 @router.post("/login")
-async def register(user:UserSchema, session:SessionDep_users,  respone: Response):
+async def register(user:UserSchema, session:SessionDep_users,  response: Response):
     result = await session.execute(select(UserModel).where(UserModel.username == user.username))
     existing_user = result.scalar_one_or_none() 
     
     if existing_user and existing_user.check_password(user.password  ):
         token = security.create_access_token(uid=str(existing_user.id))
-        respone.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token)
+        response.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token)
     
     
         return {"response": "login succesful"}
     raise HTTPException(status_code=401, detail="incorrect username or password")
+
+
+@router.get("/tracked", dependencies=[Depends(security.access_token_required)])
+async def get_tracked(session: SessionDep_users,
+                      id = Depends(get_current_user_id)):
+    
+    user = await session.execute(select(UserModel).where(UserModel.id==id))
+    user = user.scalar_one_or_none()
+    return {"response":user.tracked}
+
+

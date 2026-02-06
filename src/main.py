@@ -20,4 +20,4 @@ async def main_page(session:SessionDep_prod):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app=app)
+    uvicorn.run(app=app)    
