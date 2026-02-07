@@ -1,6 +1,6 @@
 from authx import AuthX, AuthXConfig
 from fastapi import APIRouter, Depends, HTTPException, Response
-from Schemas.UserSchemas import UserSchema
+from Schemas.UserSchemas import UserSchema, UserResponse
 from Database.db import SessionDep_users, setup_users_db
 from Models.APImodels import UserModel
 from sqlalchemy.future import select
@@ -70,3 +70,19 @@ async def get_tracked(session: SessionDep_users,
     return {"response":user.tracked}
 
 
+@router.get("/get_prof", dependencies=[Depends(security.access_token_required)])
+async def get_profile(session: SessionDep_users,
+                      id:int):
+    user = await session.execute(select(UserModel).where(UserModel.id==id))
+    user = user.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail= "No existing user with this id")
+    
+    resp = UserResponse(
+        username=user.username,
+        contacts=user.contacts,
+        id=user.id
+    )
+    
+    
+    return {"response":resp}
