@@ -54,8 +54,12 @@ async def track(session_prod: SessionDep_prod,
     product = product.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=403, detail="Product not found")
+    
     user = await session_user.execute(select(UserModel).where(UserModel.id == user_id))
     user = user.scalar_one_or_none()
+    if product.id in user.tracked:
+        return {"response":"You already tracking it"}
+    
     user.tracked.append(product.id)
 
     await session_user.commit()

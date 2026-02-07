@@ -11,6 +11,7 @@ class UserModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     username: Mapped[str] = mapped_column(nullable=False)
     hash_password: Mapped[str] = mapped_column(nullable=False)
+    contacts: Mapped[str] = mapped_column(nullable=False)
     tracked: Mapped[List[int]] = mapped_column(MutableList.as_mutable(JSON), default=list)
 
     def set_hashed_password(self, password):

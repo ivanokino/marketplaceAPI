@@ -36,7 +36,8 @@ async def register(user:UserSchema, session:SessionDep_users):
     if existing_user:
         raise HTTPException(status_code=400, detail="User is already exist")
     new_user = UserModel(
-        username=user.username
+        username=user.username,
+        contacts = user.contacts
     )
     new_user.set_hashed_password(user.password)
 
