@@ -20,7 +20,6 @@ security = AuthX(config=config)
 
 async def get_current_user_id(token = Depends(security.access_token_required)):
     payload_dict = dict(token)
-    
     user_id = payload_dict.get('sub')
     return user_id
     
@@ -35,6 +34,7 @@ async def register(user:UserSchema, session:SessionDep_users):
 
     if existing_user:
         raise HTTPException(status_code=400, detail="User is already exist")
+        
     new_user = UserModel(
         username=user.username,
         contacts = user.contacts
@@ -55,8 +55,7 @@ async def register(user:UserSchema, session:SessionDep_users,  response: Respons
     if existing_user and existing_user.check_password(user.password  ):
         token = security.create_access_token(uid=str(existing_user.id))
         response.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token)
-    
-    
+        
         return {"response": "login succesful"}
     raise HTTPException(status_code=401, detail="incorrect username or password")
 
@@ -64,7 +63,7 @@ async def register(user:UserSchema, session:SessionDep_users,  response: Respons
 @router.get("/tracked", dependencies=[Depends(security.access_token_required)])
 async def get_tracked(session: SessionDep_users,
                       id = Depends(get_current_user_id)):
-    
+                          
     user = await session.execute(select(UserModel).where(UserModel.id==id))
     user = user.scalar_one_or_none()
     return {"response":user.tracked}
@@ -75,6 +74,7 @@ async def get_profile(session: SessionDep_users,
                       id:int):
     user = await session.execute(select(UserModel).where(UserModel.id==id))
     user = user.scalar_one_or_none()
+                          
     if not user:
         raise HTTPException(status_code=404, detail= "No existing user with this id")
     
@@ -85,4 +85,5 @@ async def get_profile(session: SessionDep_users,
     )
     
     
+
     return {"response":resp}
